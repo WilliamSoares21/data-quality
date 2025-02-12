@@ -18,6 +18,4 @@ def perfil():
             else:
                 st.info("Você ainda não tem avaliações registradas.")
         except FileNotFoundError:
-            st.info("Nenhuma avaliação registrada ainda.")
-
-perfil()
+            st.info("Nenhuma avaliação registrada ainda.")       

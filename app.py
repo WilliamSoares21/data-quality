@@ -1,12 +1,20 @@
+# Description: Arquivo principal da aplicação, responsável por renderizar a interface gráfica e controlar a navegação entre as páginas.
 import streamlit as st
 from utils.auth import login, logout
+from pages.admin.avaliacao import avaliacao as admin_avaliacao
+from pages.admin.graficos import graficos as admin_graficos
+from pages.admin.denuncias import visualizar_denuncias as admin_denuncias
+from pages.perfil import perfil as user_perfil
+from pages.usuario.denuncias import denuncias as user_denuncias
 
+# Inicialização do session_state
 if "username" not in st.session_state:
     st.session_state.username = None
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
-    st.session_state.username = None
+
+if "role" not in st.session_state:
     st.session_state.role = None
 
 def main():
@@ -43,25 +51,19 @@ def show_navigation():
             show_denuncias_user()
 
 def show_avaliacao():
-    st.title("Avaliação de Atendentes")
-    atendente = st.selectbox("Selecione o atendente", ["Jefferson", "Rallyson", "Leonardo", "William", "Michelle"])
-    # Implemente a lógica de avaliação aqui
+    admin_avaliacao()
 
 def show_graficos():
-    st.title("Gráficos de Desempenho")
-    # Implemente a lógica de exibição de gráficos aqui
+    admin_graficos()
 
 def show_denuncias_admin():
-    st.title("Visualização de Denúncias")
-    # Implemente a lógica de visualização de denúncias para o admin aqui
+    admin_denuncias()
 
 def show_perfil():
-    st.title("Perfil do Usuário")
-    # Implemente a lógica de exibição do perfil aqui
+    user_perfil()
 
 def show_denuncias_user():
-    st.title("Fazer Denúncia")
-    # Implemente a lógica de criação de denúncias para usuários comuns aqui
+    user_denuncias()
 
 if __name__ == "__main__":
     main()
