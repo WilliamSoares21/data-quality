@@ -9,8 +9,18 @@ def ranking():
     # Carregar os dados de avaliações
     df = pd.read_csv("data/avaliacoes.csv")
     
+    # Verificar se o DataFrame está vazio
+    if df.empty:
+        st.warning("O DataFrame está vazio. Nenhum dado foi adicionado ainda.")
+        return
+    
     # Selecionar apenas as colunas numéricas
     numeric_cols = df.select_dtypes(include='number').columns
+    
+    # Verificar se a coluna 'AURA' existe
+    if 'AURA' not in numeric_cols:
+        st.error("A coluna 'AURA' não foi encontrada no DataFrame.")
+        return
     
     # Gráfico geral de desempenho dos atendentes
     st.subheader("Desempenho Geral dos Atendentes")
