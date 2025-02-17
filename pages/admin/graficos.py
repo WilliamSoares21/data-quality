@@ -11,6 +11,11 @@ def graficos():
     df = pd.read_csv("data/avaliacoes.csv")
     df['Data'] = pd.to_datetime(df['Data'])
     
+    # Converter as colunas de qualidades para números
+    qualidades = ['Comunicação', 'Empatia', 'Capacidade de resolução', 'Conhecimento', 'Trabalho em equipe', 
+                  'Discrição', 'Honestidade', 'Paciência', 'Pontualidade', 'AURA']
+    df[qualidades] = df[qualidades].apply(pd.to_numeric, errors='coerce')
+    
     # Selecionar o atendente
     atendente = st.selectbox("Selecione o atendente", df['Atendente'].unique(), key="select_atendente")
     
@@ -20,9 +25,6 @@ def graficos():
     # Filtrar os dados por atendente
     df_atendente = df[df['Atendente'] == atendente]
     df_atendente = df_atendente.copy()  
-    
-    qualidades = ["Comunicação", "Empatia", "Capacidade de resolução", "Conhecimento", "Trabalho em equipe", 
-                  "Discrição", "Honestidade", "Paciência", "Pontualidade", "AURA"]
     
     if tipo_grafico == "Semanal":
         # Gráfico de desempenho semanal
@@ -48,20 +50,25 @@ def graficos():
             st.plotly_chart(fig_mensal)
     
     # Ranking
-    df_ranking = df.groupby('Atendente').mean().sort_values(by='AURA', ascending=False).head(5)
+    df_ranking = df.groupby('Atendente')[qualidades].mean().reset_index()
+    df_ranking['Média Geral'] = df_ranking[qualidades].mean(axis=1).round(2)
+    df_ranking = df_ranking.sort_values(by='Média Geral', ascending=False).head(5)
+    
+    # Verificar o ranking calculado
+    st.write("Ranking calculado:", df_ranking)
     
     # Exibir o ranking com fotos
     st.subheader("Ranking de Atendentes")
-    for i, atendente in enumerate(df_ranking.index, start=1):
+    for i, row in enumerate(df_ranking.itertuples(), start=1):
         col1, col2 = st.columns([1, 3])
         with col1:
             st.markdown(f"<h2>{i}º Lugar</h2>", unsafe_allow_html=True)
         with col2:
-            st.write(f"{atendente}: {df_ranking.loc[atendente, 'AURA']}")
+            st.write(f"{row.Atendente}: {row._12:.2f}")  # _12 corresponde à coluna 'Média Geral'
             # Exibir a foto do atendente 
             try:
-                image = Image.open(f"data/fotos/{atendente.lower()}.jpg")
-                st.image(image, caption=atendente, use_container_width=True, width=150)
+                image = Image.open(f"data/fotos/{row.Atendente.lower()}.jpg")
+                st.image(image, caption=row.Atendente, use_container_width=True, width=150)
             except FileNotFoundError:
                 st.write("Foto não disponível")
 

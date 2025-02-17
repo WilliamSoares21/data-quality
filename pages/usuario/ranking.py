@@ -9,40 +9,43 @@ def ranking():
     # Carregar os dados de avaliações
     df = pd.read_csv("data/avaliacoes.csv")
     
+    # Converter as colunas de qualidades para números
+    qualidades = ['Comunicação', 'Empatia', 'Capacidade de resolução', 'Conhecimento', 'Trabalho em equipe', 
+                  'Discrição', 'Honestidade', 'Paciência', 'Pontualidade', 'AURA']
+    df[qualidades] = df[qualidades].apply(pd.to_numeric, errors='coerce')
+    
     # Verificar se o DataFrame está vazio
     if df.empty:
         st.warning("O DataFrame está vazio. Nenhum dado foi adicionado ainda.")
         return
     
-    # Selecionar apenas as colunas numéricas
-    numeric_cols = df.select_dtypes(include='number').columns
+    # Calcular a média das notas por atendente
+    df_mean = df.groupby('Atendente')[qualidades].mean().reset_index()
     
-    # Verificar se a coluna 'AURA' existe
-    if 'AURA' not in numeric_cols:
-        st.error("A coluna 'AURA' não foi encontrada no DataFrame.")
-        return
+    # Calcular a média geral de todas as qualidades para cada atendente
+    df_mean['Média Geral'] = df_mean[qualidades].mean(axis=1).round(2)
     
     # Gráfico geral de desempenho dos atendentes
     st.subheader("Desempenho Geral dos Atendentes")
-    df_mean = df.groupby('Atendente')[numeric_cols].mean().reset_index()
-    df_mean_long = pd.melt(df_mean, id_vars=['Atendente'], value_vars=numeric_cols, var_name='Qualidade', value_name='Média')
+    df_mean_long = pd.melt(df_mean, id_vars=['Atendente'], value_vars=qualidades, var_name='Qualidade', value_name='Média')
     fig = px.bar(df_mean_long, x='Atendente', y='Média', color='Qualidade', barmode='group', title="Desempenho Geral dos Atendentes")
     st.plotly_chart(fig)
     
-    # Calcular o ranking
-    df_ranking = df.groupby('Atendente')[numeric_cols].mean().sort_values(by='AURA', ascending=False).head(5)
+    # Calcular o ranking com base na média geral
+    df_ranking = df_mean.sort_values(by='Média Geral', ascending=False).reset_index(drop=True)
     
     # Exibir o ranking com fotos
-    for i, atendente in enumerate(df_ranking.index, start=1):
+    st.subheader("Ranking de Atendentes")
+    for i, row in enumerate(df_ranking.itertuples(), start=1):
         col1, col2 = st.columns([1, 3])
         with col1:
             st.markdown(f"<h2>{i}º Lugar</h2>", unsafe_allow_html=True)
         with col2:
-            st.write(f"{atendente}: {df_ranking.loc[atendente, 'AURA']}")
+            st.write(f"{row.Atendente}: {row._12:.2f}")  # _12 corresponde à coluna 'Média Geral'
             # Exibir a foto do atendente 
             try:
-                image = Image.open(f"data/fotos/{atendente.lower()}.jpg")
-                st.image(image, caption=atendente, use_container_width=True, width=150)
+                image = Image.open(f"data/fotos/{row.Atendente.lower()}.jpg")
+                st.image(image, caption=row.Atendente, use_container_width=True, width=150)
             except FileNotFoundError:
                 st.write("Foto não disponível")
 
