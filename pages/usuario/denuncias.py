@@ -1,7 +1,11 @@
 # pages/usuario/denuncias.py
 import streamlit as st
-import pandas as pd
+from pymongo import MongoClient
 from datetime import datetime
+
+def get_database():
+    client = MongoClient(st.secrets["mongo"]["uri"])
+    return client["cluster-data-quality"]
 
 def denuncias():
     st.title("Fazer Denúncia")
@@ -11,21 +15,15 @@ def denuncias():
     
     if st.button("Enviar Denúncia"):
         data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        denuncia = pd.DataFrame({
-            "Denunciante": [st.session_state.username],
-            "Denunciado": [denunciado],
-            "Motivo": [motivo],
-            "Data": [data]
-        })
+        denuncia = {
+            "Denunciante": st.session_state.username,
+            "Denunciado": denunciado,
+            "Motivo": motivo,
+            "Data": data
+        }
         
-        # Salvar em um arquivo CSV
-        try:
-            df = pd.read_csv("data/denuncias.csv")
-            df = pd.concat([df, denuncia], ignore_index=True)
-        except FileNotFoundError:
-            df = denuncia
-        
-        df.to_csv("data/denuncias.csv", index=False)
+        db = get_database()
+        db.denuncias.insert_one(denuncia)
         st.success("Denúncia enviada com sucesso!")
 
 denuncias()
