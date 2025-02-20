@@ -172,3 +172,9 @@ cython_debug/
 
 # MongoDB Atlas credentials
 .streamlit/secrets.toml
+
+# Outros arquivos sensíveis
+data/usuarios.py
+data/denuncias.py
+data/avaliacoes.py
+utils/data.py
