@@ -73,6 +73,7 @@ networkx==3.2.1
 notebook_shim==0.2.4
 numpy==2.2.0
 overrides==7.7.0
+pymongo>=4.7
 packaging==24.2
 pandas==2.2.3
 pandocfilters==1.5.1
