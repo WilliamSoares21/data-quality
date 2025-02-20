@@ -7,6 +7,12 @@ from PIL import Image
 def perfil():
     st.title("Perfil do Usuário")
     
+    # Inicializar as chaves 'username' e 'role' se não estiverem presentes
+    if 'username' not in st.session_state:
+        st.session_state.username = "Usuário Desconhecido"
+    if 'role' not in st.session_state:
+        st.session_state.role = "user"  # ou "admin" dependendo do contexto
+
     st.write(f"Nome de usuário: {st.session_state.username}")
     st.write(f"Função: {'Administrador' if st.session_state.role == 'admin' else 'Usuário comum'}")
     
