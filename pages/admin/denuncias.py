@@ -24,12 +24,12 @@ def visualizar_denuncias():
                 if denuncia['status'] == 'em_analise':
                     if st.button("Aprovar", key=f"aprovar_{denuncia['_id']}"):
                         denuncias_collection.update_one({"_id": denuncia["_id"]}, {"$set": {"status": "aceita"}})
-                        st.experimental_rerun()
+                        st.rerun()
                     if st.button("Rejeitar", key=f"rejeitar_{denuncia['_id']}"):
                         comentario = st.text_area("Comentário do Admin", key=f"comentario_{denuncia['_id']}")
                         if comentario:
                             denuncias_collection.update_one({"_id": denuncia["_id"]}, {"$set": {"status": "recusada", "comentario_admin": comentario}})
-                            st.experimental_rerun()
+                            st.rerun()
     else:
         st.info("Nenhuma denúncia registrada ainda.")
 
