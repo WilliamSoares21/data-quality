@@ -2,7 +2,11 @@ import streamlit as st
 from pymongo import MongoClient
 
 def get_database():
-    client = MongoClient(st.secrets["mongo"]["uri"])
+    client = MongoClient(
+        st.secrets["mongo"]["uri"],
+        tls=True,
+        tlsAllowInvalidCertificates=True
+    )
     return client["cluster-data-quality"]
 
 def test_connection():

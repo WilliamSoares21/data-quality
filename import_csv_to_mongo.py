@@ -3,7 +3,11 @@ from pymongo import MongoClient
 import streamlit as st
 
 def get_database():
-    client = MongoClient(st.secrets["mongo"]["uri"])
+    client = MongoClient(
+        st.secrets["mongo"]["uri"],
+        tls=True,
+        tlsAllowInvalidCertificates=True
+    )
     return client["cluster-data-quality"]
 
 def import_csv_to_mongo():

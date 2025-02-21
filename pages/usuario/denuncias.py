@@ -16,10 +16,12 @@ def denuncias():
     if st.button("Enviar Denúncia"):
         data = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         denuncia = {
-            "Denunciante": st.session_state.username,
-            "Denunciado": denunciado,
-            "Motivo": motivo,
-            "Data": data
+            "denunciante": st.session_state.username,
+            "denunciado": denunciado,
+            "motivo": motivo,
+            "data": data,
+            "status": "em_analise",
+            "comentario_admin": ""
         }
         
         db = get_database()

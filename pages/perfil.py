@@ -3,6 +3,11 @@ import streamlit as st
 import pandas as pd
 import os
 from PIL import Image
+from pymongo import MongoClient
+
+def get_database():
+    client = MongoClient(st.secrets["mongo"]["uri"])
+    return client["cluster-data-quality"]
 
 def perfil():
     st.title("Perfil do Usuário")
@@ -33,17 +38,31 @@ def perfil():
         st.success("Foto de perfil atualizada com sucesso!")
         st.image(uploaded_file, caption=st.session_state.username, use_container_width=True)
     
-    if st.session_state.role != 'admin':
-        try:
-            df = pd.read_csv("data/avaliacoes.csv")
-            df_user = df[df['Atendente'] == st.session_state.username]
-            if not df_user.empty:
-                st.subheader("Suas avaliações recentes")
-                st.dataframe(df_user.sort_values('Data', ascending=False).head())
-            else:
-                st.info("Você ainda não tem avaliações registradas.")
-        except FileNotFoundError:
-            st.info("Nenhuma avaliação registrada ainda.")
+    db = get_database()
+    
+    # Exibir avaliações recentes
+    avaliacoes_collection = db["avaliacoes"]
+    df_user = pd.DataFrame(list(avaliacoes_collection.find({"atendente": st.session_state.username})))
+    if not df_user.empty:
+        st.subheader("Suas avaliações recentes")
+        st.dataframe(df_user.sort_values('data', ascending=False).head())
+    else:
+        st.info("Você ainda não tem avaliações registradas.")
+    
+    # Exibir denúncias feitas pelo usuário
+    denuncias_collection = db["denuncias"]
+    df_denuncias = pd.DataFrame(list(denuncias_collection.find({"denunciante": st.session_state.username})))
+    if not df_denuncias.empty:
+        st.subheader("Suas denúncias")
+        for _, denuncia in df_denuncias.iterrows():
+            st.write(f"Denunciado: {denuncia['denunciado']}")
+            st.write(f"Motivo: {denuncia['motivo']}")
+            st.write(f"Data: {denuncia['data']}")
+            st.write(f"Status: {denuncia['status']}")
+            if denuncia['status'] == 'recusada':
+                st.write(f"Comentário do Admin: {denuncia['comentario_admin']}")
+    else:
+        st.info("Você ainda não fez nenhuma denúncia.")
 
 if __name__ == "__main__":
     perfil()
