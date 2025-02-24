@@ -54,13 +54,21 @@ def perfil():
     df_denuncias = pd.DataFrame(list(denuncias_collection.find({"denunciante": st.session_state.username})))
     if not df_denuncias.empty:
         st.subheader("Suas denúncias")
-        for _, denuncia in df_denuncias.iterrows():
-            st.write(f"Denunciado: {denuncia['denunciado']}")
-            st.write(f"Motivo: {denuncia['motivo']}")
-            st.write(f"Data: {denuncia['data']}")
-            st.write(f"Status: {denuncia['status']}")
-            if denuncia['status'] == 'recusada':
-                st.write(f"Comentário do Admin: {denuncia['comentario_admin']}")
+        denunciados = df_denuncias['denunciado'].unique()
+        for denunciado in denunciados:
+            denuncias_denunciado = df_denuncias[df_denuncias['denunciado'] == denunciado]
+            for _, denuncia in denuncias_denunciado.iterrows():
+                status_emoji = {
+                    "recusada": "🔴",
+                    "em_analise": "🟡",
+                    "aceita": "🟢"
+                }.get(denuncia['status'], "⚪")
+                with st.expander(f"{status_emoji} Denúncia contra {denunciado}"):
+                    st.write(f"**Motivo:** {denuncia['motivo']}")
+                    st.write(f"**Data:** {denuncia['data']}")
+                    st.write(f"**Status:** {denuncia['status']}")
+                    if denuncia['status'] == 'recusada':
+                        st.write(f"**Comentário do Admin:** {denuncia['comentario_admin']}")
     else:
         st.info("Você ainda não fez nenhuma denúncia.")
 

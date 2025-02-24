@@ -15,7 +15,13 @@ def visualizar_denuncias():
     denuncias = list(denuncias_collection.find())
     if denuncias:
         for denuncia in denuncias:
-            with st.expander(f"Denúncia de {denuncia['denunciante']} contra {denuncia['denunciado']}"):
+            status_emoji = {
+                "recusada": "🔴",
+                "em_analise": "🟡",
+                "aceita": "🟢"
+            }.get(denuncia['status'], "⚪")
+            
+            with st.expander(f"{status_emoji} Denúncia de {denuncia['denunciante']} contra {denuncia['denunciado']}"):
                 st.write(f"**Motivo:** {denuncia['motivo']}")
                 st.write(f"**Data:** {denuncia['data']}")
                 st.write(f"**Status:** {denuncia['status']}")
