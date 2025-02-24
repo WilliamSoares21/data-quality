@@ -3,32 +3,40 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from PIL import Image
+from pymongo import MongoClient
+
+def get_database():
+    client = MongoClient(st.secrets["mongo"]["uri"])
+    return client["cluster-data-quality"]
 
 def graficos():
     st.title("Gráficos de Desempenho")
     
-    # Carregar os dados de avaliações
-    df = pd.read_csv("data/avaliacoes.csv")
-    df['Data'] = pd.to_datetime(df['Data'])
+    db = get_database()
+    avaliacoes_collection = db["avaliacoes"]
+    
+    # Carregar os dados de avaliações do MongoDB
+    df = pd.DataFrame(list(avaliacoes_collection.find()))
+    df['data'] = pd.to_datetime(df['data'])
     
     # Converter as colunas de qualidades para números
-    qualidades = ['Comunicação', 'Empatia', 'Capacidade de resolução', 'Conhecimento', 'Trabalho em equipe', 
-                  'Discrição', 'Honestidade', 'Paciência', 'Pontualidade', 'AURA']
+    qualidades = ['comunicacao', 'empatia', 'capacidade_resolucao', 'conhecimento', 'trabalho_equipe', 
+                  'discricao', 'honestidade', 'paciencia', 'pontualidade', 'aura']
     df[qualidades] = df[qualidades].apply(pd.to_numeric, errors='coerce')
     
     # Selecionar o atendente
-    atendente = st.selectbox("Selecione o atendente", df['Atendente'].unique(), key="select_atendente")
+    atendente = st.selectbox("Selecione o atendente", df['atendente'].unique(), key="select_atendente")
     
     # Selecionar o tipo de gráfico
     tipo_grafico = st.selectbox("Selecione o tipo de gráfico", ["Semanal", "Mensal"], key="select_tipo_grafico")
     
     # Filtrar os dados por atendente
-    df_atendente = df[df['Atendente'] == atendente]
+    df_atendente = df[df['atendente'] == atendente]
     df_atendente = df_atendente.copy()  
     
     if tipo_grafico == "Semanal":
         # Gráfico de desempenho semanal
-        df_atendente.loc[:, 'Semana'] = df_atendente['Data'].dt.to_period('W').apply(lambda r: r.start_time)
+        df_atendente.loc[:, 'Semana'] = df_atendente['data'].dt.to_period('W').apply(lambda r: r.start_time)
         df_semanal = df_atendente.groupby('Semana')[qualidades].mean().reset_index()
         if df_semanal.empty:
             st.warning("Não há dados suficientes para gerar o gráfico semanal.")
@@ -39,7 +47,7 @@ def graficos():
             st.plotly_chart(fig_semanal)
     else:
         # Gráfico de desempenho mensal
-        df_atendente['Mês'] = df_atendente['Data'].dt.to_period('M').apply(lambda r: r.start_time)
+        df_atendente['Mês'] = df_atendente['data'].dt.to_period('M').apply(lambda r: r.start_time)
         df_mensal = df_atendente.groupby('Mês')[qualidades].mean().reset_index()
         if df_mensal.empty:
             st.warning("Não há dados suficientes para gerar o gráfico mensal.")
@@ -50,7 +58,7 @@ def graficos():
             st.plotly_chart(fig_mensal)
     
     # Ranking
-    df_ranking = df.groupby('Atendente')[qualidades].mean().reset_index()
+    df_ranking = df.groupby('atendente')[qualidades].mean().reset_index()
     df_ranking['Média Geral'] = df_ranking[qualidades].mean(axis=1).round(2)
     df_ranking = df_ranking.sort_values(by='Média Geral', ascending=False).head(5)
     
@@ -64,11 +72,11 @@ def graficos():
         with col1:
             st.markdown(f"<h2>{i}º Lugar</h2>", unsafe_allow_html=True)
         with col2:
-            st.write(f"{row.Atendente}: {row._12:.2f}")  # _12 corresponde à coluna 'Média Geral'
+            st.write(f"{row.atendente}: {row._12:.2f}")  # _12 corresponde à coluna 'Média Geral'
             # Exibir a foto do atendente 
             try:
-                image = Image.open(f"data/fotos/{row.Atendente.lower()}.jpg")
-                st.image(image, caption=row.Atendente, use_container_width=True, width=150)
+                image = Image.open(f"data/fotos/{row.atendente.lower()}.jpg")
+                st.image(image, caption=row.atendente, use_container_width=True, width=150)
             except FileNotFoundError:
                 st.write("Foto não disponível")
 
