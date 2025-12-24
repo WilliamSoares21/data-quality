@@ -178,3 +178,13 @@ data/usuarios.py
 data/denuncias.py
 data/avaliacoes.py
 utils/data.py
+
+# Security reports (temporários)
+security_report_*.txt
+
+# Requirements temporários
+requirements.txt.new
+*requirements.txt~
+
+# NEXT_STEPS (documentação temporária)
+NEXT_STEPS.md
