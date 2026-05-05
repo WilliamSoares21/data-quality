@@ -28,4 +28,5 @@ def denuncias():
         db.denuncias.insert_one(denuncia)
         st.success("Denúncia enviada com sucesso!")
 
-denuncias()
+if __name__ == "__main__":
+    denuncias()
