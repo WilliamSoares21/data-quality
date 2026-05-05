@@ -39,4 +39,5 @@ def visualizar_denuncias():
     else:
         st.info("Nenhuma denúncia registrada ainda.")
 
-visualizar_denuncias()
+if __name__ == "__main__":
+    visualizar_denuncias()
