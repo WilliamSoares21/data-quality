@@ -40,4 +40,5 @@ def avaliacao():
         avaliacoes_collection.insert_one(avaliacao)
         st.success("Avaliação salva com sucesso!")
 
-avaliacao()
+if __name__ == "__main__":
+    avaliacao()
