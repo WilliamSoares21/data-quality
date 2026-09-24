@@ -1,77 +1,69 @@
-# Description: Arquivo principal da aplicação, responsável por renderizar a interface gráfica e controlar a navegação entre as páginas.
+"""
+Dashboard de Qualidade de Dados - Arquivo Principal da Aplicação.
+Gerencia inicialização de estado da sessão, autorização global e roteamento moderno via st.Page e st.navigation.
+"""
+
 import streamlit as st
-from utils.auth import login, logout
-from pages.admin.avaliacao import avaliacao as admin_avaliacao
-from pages.admin.graficos import graficos as admin_graficos
-from pages.admin.denuncias import visualizar_denuncias as admin_denuncias
-from pages.perfil import perfil as user_perfil
-from pages.usuario.denuncias import denuncias as user_denuncias
-from pages.usuario.ranking import ranking as user_ranking  # Importando a nova página de ranking
+from utils.auth import logout
 
-# Inicialização do session_state
-if "username" not in st.session_state:
-    st.session_state.username = None
+# 1. Configuração Global da Página
+st.set_page_config(
+    page_title="Dashboard de Qualidade de Dados",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
+# 2. Inicialização Centralizada e Segura do Session State
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
+
+if "username" not in st.session_state:
+    st.session_state.username = None
 
 if "role" not in st.session_state:
     st.session_state.role = None
 
-def main():
-    if not st.session_state.logged_in:
-        st.title("Login")
-        username = st.text_input("Usuário", key="login_username")
-        password = st.text_input("Senha", type="password", key="login_password")
-        if st.button("Login", key="login_button"):
-            if login(username, password):
-                st.success(f"Bem-vindo, {username}!")
-                st.rerun()
-            else:
-                st.error("Usuário ou senha inválidos")
-    else:
-        show_navigation()
+if "user_id" not in st.session_state:
+    st.session_state.user_id = None
 
-def show_navigation():
-    st.sidebar.title(f"Bem-vindo, {st.session_state.username}")
-    if st.sidebar.button("Logout", key="logout_button"):
+# 3. Definição de Páginas Nativas via st.Page
+login_page = st.Page("views/login.py", title="Login", icon="🔒")
+
+# Páginas de Usuário Comum
+perfil_page = st.Page("views/perfil.py", title="Meu Perfil", icon="👤")
+user_denuncias_page = st.Page("views/user_denuncias.py", title="Fazer Denúncia", icon="⚠️")
+user_ranking_page = st.Page("views/user_ranking.py", title="Ranking de Atendentes", icon="🏆")
+
+# Páginas de Administrador
+admin_avaliacao_page = st.Page("views/admin_avaliacao.py", title="Avaliação de Atendentes", icon="📝")
+admin_graficos_page = st.Page("views/admin_graficos.py", title="Gráficos de Desempenho", icon="📈")
+admin_denuncias_page = st.Page("views/admin_denuncias.py", title="Gerenciar Denúncias", icon="🛡️")
+
+# 4. Roteamento Dinâmico por Perfil
+if not st.session_state.logged_in:
+    pg = st.navigation([login_page])
+else:
+    # Sidebar personalizada para usuário autenticado
+    st.sidebar.markdown(f"### 👋 Olá, **{st.session_state.username}**")
+    st.sidebar.caption(f"Perfil: **{st.session_state.role.upper() if st.session_state.role else 'USER'}**")
+    
+    if st.sidebar.button("🚪 Sair (Logout)", type="secondary", width="stretch"):
         logout()
         st.rerun()
 
+    # Montagem da estrutura de menu dinâmico
     if st.session_state.role == "admin":
-        page = st.sidebar.radio("Navegação", ["Avaliação", "Gráficos", "Denúncias"], key="admin_navigation")
-        if page == "Avaliação":
-            show_avaliacao()
-        elif page == "Gráficos":
-            show_graficos()
-        elif page == "Denúncias":
-            show_denuncias_admin()
+        nav_dict = {
+            "Painel Administrativo": [admin_avaliacao_page, admin_graficos_page, admin_denuncias_page],
+            "Área do Usuário": [perfil_page, user_denuncias_page, user_ranking_page]
+        }
     else:
-        page = st.sidebar.radio("Navegação", ["Perfil", "Denúncias", "Ranking"], key="user_navigation")  # Adicionar "Ranking" na navegação
-        if page == "Perfil":
-            show_perfil()
-        elif page == "Denúncias":
-            show_denuncias_user()
-        elif page == "Ranking":
-            show_ranking()  # Chamar a função para exibir o ranking
+        nav_dict = {
+            "Navegação": [perfil_page, user_denuncias_page, user_ranking_page]
+        }
+    
+    pg = st.navigation(nav_dict)
 
-def show_avaliacao():
-    admin_avaliacao()
-
-def show_graficos():
-    admin_graficos()
-
-def show_denuncias_admin():
-    admin_denuncias()
-
-def show_perfil():
-    user_perfil()
-
-def show_denuncias_user():
-    user_denuncias()
-
-def show_ranking():
-    user_ranking() 
-
-if __name__ == "__main__":
-    main()
+# 5. Execução da Página Roteada
+pg.run()
