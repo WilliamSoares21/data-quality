@@ -1,49 +1,32 @@
 """
-Módulo de Conexão com Banco de Dados.
-Gerencia instâncias de banco de dados reutilizando pools de conexão via @st.cache_resource.
+Módulo de Conexão e Gerenciamento de Estado de Demonstração em Memória.
+Substitui completamente bancos de dados externos por persistência volátil em st.session_state,
+garantindo isolamento por sessão de usuário, conformidade AppSec e zero custos de infraestrutura.
 """
 
 import streamlit as st
-import sqlite3
-import os
-from pathlib import Path
-from pymongo import MongoClient
+from typing import Any
 
-@st.cache_resource
-def get_mongo_client() -> MongoClient:
-    """
-    Retorna uma instância de MongoClient otimizada e em cache.
-    Reaproveita o pool de conexões entre execuções reativas do Streamlit.
-    """
-    if "mongo" in st.secrets and "uri" in st.secrets["mongo"]:
-        uri = st.secrets["mongo"]["uri"]
-        client = MongoClient(uri, tls=True, serverSelectionTimeoutMS=5000)
-        return client
-    return None
 
-@st.cache_resource
-def get_sqlite_connection(db_path: str = "data/database.sqlite"):
+def init_demo_data(force: bool = False) -> None:
     """
-    Retorna conexão com banco SQLite local como fallback de persistência estruturada.
+    Inicializa o st.session_state com os datasets simulados de demonstração (Mock Data),
+    caso ainda não tenham sido carregados na sessão do usuário.
+    
+    Args:
+        force: Se True, reinicializa todos os dados para o estado padrão original.
     """
-    os.makedirs(os.path.dirname(db_path), exist_ok=True)
-    conn = sqlite3.connect(db_path, check_same_thread=False)
-    conn.row_factory = sqlite3.Row
-    return conn
+    from database.repository import init_demo_state
+    init_demo_state(force=force)
 
-def get_database():
+
+def get_database() -> dict[str, Any]:
     """
-    Obtém o cliente de banco de dados ativo (MongoDB se configurado em secrets, caso contrário SQLite/Memory).
+    Provedor de contexto de dados em memória.
+    Mantido para compatibilidade arquitetural com a camada de serviços.
     """
-    mongo_client = get_mongo_client()
-    if mongo_client:
-        try:
-            # Tenta realizar ping rápido no MongoDB
-            mongo_client.admin.command('ping')
-            return {"type": "mongo", "db": mongo_client["cluster-data-quality"]}
-        except Exception:
-            pass
-            
-    # Fallback para SQLite local
-    sqlite_conn = get_sqlite_connection()
-    return {"type": "sqlite", "db": sqlite_conn}
+    init_demo_data()
+    return {
+        "type": "memory",
+        "session": st.session_state
+    }
