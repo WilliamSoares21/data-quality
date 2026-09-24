@@ -5,7 +5,7 @@ Permite que o usuário autenticado registre uma denúncia contra um atendente.
 
 import streamlit as st
 from utils.auth import check_permission
-from database.repository import insert_denuncia
+from database.repository import insert_denuncia, FUNCIONARIOS
 
 def render_user_denuncias_view():
     # Guarda declarativo de usuário autenticado
@@ -16,7 +16,7 @@ def render_user_denuncias_view():
 
     denunciado = st.selectbox(
         "Selecione o Atendente a ser Denunciado",
-        ["Jefferson", "Rallyson", "Leonardo", "William", "Michelle"],
+        FUNCIONARIOS,
         key="user_select_denunciado"
     )
     

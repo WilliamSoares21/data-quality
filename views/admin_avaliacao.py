@@ -5,7 +5,7 @@ Permite que administradores registrem avaliações de qualidade dos atendentes.
 
 import streamlit as st
 from utils.auth import check_permission
-from database.repository import insert_avaliacao
+from database.repository import insert_avaliacao, FUNCIONARIOS
 
 QUALIDADES = [
     "comunicacao", "empatia", "capacidade_resolucao", "conhecimento", "trabalho_equipe", 
@@ -21,7 +21,7 @@ def render_admin_avaliacao_view():
 
     atendente = st.selectbox(
         "Selecione o Atendente",
-        ["Jefferson", "Rallyson", "Leonardo", "William", "Michelle"],
+        FUNCIONARIOS,
         key="admin_select_atendente"
     )
     

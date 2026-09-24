@@ -1,10 +1,12 @@
 """
 Dashboard de Qualidade de Dados - Arquivo Principal da Aplicação.
-Gerencia inicialização de estado da sessão, autorização global e roteamento moderno via st.Page e st.navigation.
+Gerencia inicialização de estado da sessão, autorização global, mock data e roteamento moderno via st.Page e st.navigation.
 """
 
 import streamlit as st
 from utils.auth import logout
+from database.connection import init_demo_data
+from database.repository import reset_demo_data
 
 # 1. Configuração Global da Página
 st.set_page_config(
@@ -14,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# 2. Inicialização Centralizada e Segura do Session State
+# 2. Inicialização Centralizada e Segura do Session State e Mock Data
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 
@@ -26,6 +28,9 @@ if "role" not in st.session_state:
 
 if "user_id" not in st.session_state:
     st.session_state.user_id = None
+
+# Inicializa datasets simulados em memória para isolamento de sessão
+init_demo_data()
 
 # 3. Definição de Páginas Nativas via st.Page
 login_page = st.Page("views/login.py", title="Login", icon="🔒")
@@ -50,6 +55,12 @@ else:
     
     if st.sidebar.button("🚪 Sair (Logout)", type="secondary", width="stretch"):
         logout()
+        st.rerun()
+
+    st.sidebar.divider()
+    if st.sidebar.button("🔄 Restaurar Dados Demo", help="Restaura os dados mockados originais da sessão", width="stretch"):
+        reset_demo_data()
+        st.sidebar.success("Dados restaurados!")
         st.rerun()
 
     # Montagem da estrutura de menu dinâmico
