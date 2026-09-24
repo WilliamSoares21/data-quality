@@ -170,8 +170,15 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 
-# MongoDB Atlas credentials
+# MongoDB Atlas & Streamlit Local Secrets
 .streamlit/secrets.toml
+
+# Bancos de Dados Locais e Arquivos de Dados
+*.sqlite
+*.sqlite3
+*.db
+data/*.sqlite
+data/*.db
 
 # Outros arquivos sensíveis
 data/usuarios.py
